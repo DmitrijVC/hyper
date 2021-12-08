@@ -33,7 +33,7 @@ httpdate = "1.0"
 httparse = "1.5.1"
 h2 = { version = "0.3.3", optional = true }
 itoa = "0.4.1"
-tracing = { version = "0.1", default-features = false, features = ["std"] }
+tracing = { version = "0.1", default-features = false, features = ["std"], optional = true }
 pin-project-lite = "0.2.4"
 tower-service = "0.3"
 tokio = { version = "1", features = ["sync"] }
@@ -83,6 +83,7 @@ full = [
     "server",
     "stream",
     "runtime",
+    "log",
 ]
 
 # HTTP versions
@@ -107,6 +108,11 @@ tcp = [
     "tokio/net",
     "tokio/rt",
     "tokio/time",
+]
+
+# Tracing support
+log = [
+    "tracing",
 ]
 
 # C-API support (currently unstable (no semver))

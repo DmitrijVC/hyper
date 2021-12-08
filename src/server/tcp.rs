@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use tokio::net::TcpListener;
 use tokio::time::Sleep;
+#[cfg(feature = "log")]
 use tracing::{debug, error, trace};
 
 use crate::common::{task, Future, Pin, Poll};
@@ -112,11 +113,11 @@ impl AddrIncoming {
                         let socket = socket2::SockRef::from(&socket);
                         let conf = socket2::TcpKeepalive::new().with_time(dur);
                         if let Err(e) = socket.set_tcp_keepalive(&conf) {
-                            trace!("error trying to set TCP keepalive: {}", e);
+                            #[cfg(feature = "log")] trace!("error trying to set TCP keepalive: {}", e);
                         }
                     }
                     if let Err(e) = socket.set_nodelay(self.tcp_nodelay) {
-                        trace!("error trying to set TCP nodelay: {}", e);
+                        #[cfg(feature = "log")] trace!("error trying to set TCP nodelay: {}", e);
                     }
                     return Poll::Ready(Ok(AddrStream::new(socket, addr)));
                 }
@@ -124,12 +125,12 @@ impl AddrIncoming {
                     // Connection errors can be ignored directly, continue by
                     // accepting the next request.
                     if is_connection_error(&e) {
-                        debug!("accepted connection already errored: {}", e);
+                        #[cfg(feature = "log")] debug!("accepted connection already errored: {}", e);
                         continue;
                     }
 
                     if self.sleep_on_errors {
-                        error!("accept error: {}", e);
+                        #[cfg(feature = "log")] error!("accept error: {}", e);
 
                         // Sleep 1s.
                         let mut timeout = Box::pin(tokio::time::sleep(Duration::from_secs(1)));

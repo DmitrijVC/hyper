@@ -2,6 +2,7 @@ use std::error::Error as StdError;
 
 use pin_project_lite::pin_project;
 use tokio::io::{AsyncRead, AsyncWrite};
+#[cfg(feature = "log")]
 use tracing::debug;
 
 use super::accept::Accept;
@@ -73,7 +74,7 @@ where
                         signal,
                     } => match signal.poll(cx) {
                         Poll::Ready(()) => {
-                            debug!("signal received, starting graceful shutdown");
+                            #[cfg(feature = "log")] debug!("signal received, starting graceful shutdown");
                             let sig = drain.take().expect("drain channel").0;
                             State::Draining {
                                 draining: sig.drain(),

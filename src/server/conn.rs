@@ -68,6 +68,7 @@ cfg_feature! {
     use bytes::Bytes;
     use pin_project_lite::pin_project;
     use tokio::io::{AsyncRead, AsyncWrite};
+    #[cfg(feature = "log")]
     use tracing::trace;
 
     use super::accept::Accept;
@@ -854,7 +855,7 @@ where
 
     #[cfg(all(feature = "http1", feature = "http2"))]
     fn upgrade_h2(&mut self) {
-        trace!("Trying to upgrade connection to h2");
+        #[cfg(feature = "log")] trace!("Trying to upgrade connection to h2");
         let conn = self.conn.take();
 
         let (io, read_buf, dispatch) = match conn.unwrap() {
@@ -1005,7 +1006,7 @@ where
         match ready!(me.make_service.poll_ready_ref(cx)) {
             Ok(()) => (),
             Err(e) => {
-                trace!("make_service closed");
+                #[cfg(feature = "log")] trace!("make_service closed");
                 return Poll::Ready(Some(Err(crate::Error::new_user_make_service(e))));
             }
         }
@@ -1131,6 +1132,7 @@ where
 pub(crate) mod spawn_all {
     use std::error::Error as StdError;
     use tokio::io::{AsyncRead, AsyncWrite};
+    #[cfg(feature = "log")]
     use tracing::debug;
 
     use super::{Connecting, UpgradeableConnection};
@@ -1248,7 +1250,7 @@ pub(crate) mod spawn_all {
                                 Ok(conn) => conn,
                                 Err(err) => {
                                     let err = crate::Error::new_user_make_service(err);
-                                    debug!("connecting error: {}", err);
+                                    #[cfg(feature = "log")] debug!("connecting error: {}", err);
                                     return Poll::Ready(());
                                 }
                             };
@@ -1258,7 +1260,7 @@ pub(crate) mod spawn_all {
                         StateProj::Connected { future } => {
                             return future.poll(cx).map(|res| {
                                 if let Err(err) = res {
-                                    debug!("connection error: {}", err);
+                                    #[cfg(feature = "log")] debug!("connection error: {}", err);
                                 }
                             });
                         }

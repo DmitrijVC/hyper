@@ -3,6 +3,7 @@ use std::io::IoSlice;
 
 use bytes::buf::{Chain, Take};
 use bytes::Buf;
+#[cfg(feature = "log")]
 use tracing::trace;
 
 use super::io::WriteBuf;
@@ -111,14 +112,14 @@ impl Encoder {
 
         let kind = match self.kind {
             Kind::Chunked => {
-                trace!("encoding chunked {}B", len);
+                #[cfg(feature = "log")] trace!("encoding chunked {}B", len);
                 let buf = ChunkSize::new(len)
                     .chain(msg)
                     .chain(b"\r\n" as &'static [u8]);
                 BufKind::Chunked(buf)
             }
             Kind::Length(ref mut remaining) => {
-                trace!("sized write, len = {}", len);
+                #[cfg(feature = "log")] trace!("sized write, len = {}", len);
                 if len as u64 > *remaining {
                     let limit = *remaining as usize;
                     *remaining = 0;
@@ -130,7 +131,7 @@ impl Encoder {
             }
             #[cfg(feature = "server")]
             Kind::CloseDelimited => {
-                trace!("close delimited write {}B", len);
+                #[cfg(feature = "log")] trace!("close delimited write {}B", len);
                 BufKind::Exact(msg)
             }
         };
@@ -146,7 +147,7 @@ impl Encoder {
 
         match self.kind {
             Kind::Chunked => {
-                trace!("encoding chunked {}B", len);
+                #[cfg(feature = "log")] trace!("encoding chunked {}B", len);
                 let buf = ChunkSize::new(len)
                     .chain(msg)
                     .chain(b"\r\n0\r\n\r\n" as &'static [u8]);
@@ -156,7 +157,7 @@ impl Encoder {
             Kind::Length(remaining) => {
                 use std::cmp::Ordering;
 
-                trace!("sized write, len = {}", len);
+                #[cfg(feature = "log")] trace!("sized write, len = {}", len);
                 match (len as u64).cmp(&remaining) {
                     Ordering::Equal => {
                         dst.buffer(msg);
@@ -174,7 +175,7 @@ impl Encoder {
             }
             #[cfg(feature = "server")]
             Kind::CloseDelimited => {
-                trace!("close delimited write {}B", len);
+                #[cfg(feature = "log")] trace!("close delimited write {}B", len);
                 dst.buffer(msg);
                 false
             }
@@ -202,7 +203,7 @@ impl Encoder {
         match self.kind {
             Kind::Chunked => {
                 let len = msg.remaining();
-                trace!("encoding chunked {}B", len);
+                #[cfg(feature = "log")] trace!("encoding chunked {}B", len);
                 let buf = ChunkSize::new(len)
                     .chain(msg)
                     .chain(b"\r\n0\r\n\r\n" as &'static [u8]);
